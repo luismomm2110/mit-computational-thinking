@@ -422,26 +422,31 @@ if __name__ == '__main__':
     nyc_at_jan10 = pylab.array(nyc_at_jan10)
     years = pylab.array(years)
 
-    modelA = generate_models(years, nyc_at_jan10, [1])
-    evaluate_models_on_training(years, nyc_at_jan10, modelA)
+    #modelA = generate_models(years, nyc_at_jan10, [1])
+    #evaluate_models_on_training(years, nyc_at_jan10, modelA)
 
-    modelB = generate_models(years, average_year, [1])
-    evaluate_models_on_training(years, average_year, modelB)
+    #modelB = generate_models(years, average_year, [1])
+    #evaluate_models_on_training(years, average_year, modelB)
 
-    # Part B
+    ## Part B
     cities_avg = gen_cities_avg(climate, CITIES, years)
-    modelC = generate_models(years, cities_avg, [1])
-    evaluate_models_on_training(years, cities_avg, modelC)
+    #modelC = generate_models(years, cities_avg, [1])
+    #evaluate_models_on_training(years, cities_avg, modelC)
 
+    #mvg_avg = moving_average(cities_avg, 5)
+    #modelD = generate_models(years, mvg_avg, [1])
+    #evaluate_models_on_training(years, mvg_avg, modelD)
+
+    ## Part C
     mvg_avg = moving_average(cities_avg, 5)
-    modelD = generate_models(years, mvg_avg, [1])
-    evaluate_models_on_training(years, mvg_avg, modelD)
+    #modelD = generate_models(years, mvg_avg, [1])
+    #evaluate_models_on_training(years, mvg_avg, modelD)
 
-    # Part C
-    # TODO: replace is line with your code
-
-    # Part D.2
-    # TODO: replace this line with your code
+    ## Part D.2
+    modelsA = generate_models(years, mvg_avg, [1, 2, 20])
+    import pdb
+    pdb.set_trace()
+    evaluate_models_on_training(years, mvg_avg, modelsA)
 
     # Part E
     # TODO: replace this line with your code
