@@ -4,8 +4,11 @@
 # Collaborators (discussion):
 # Time:
 
+from argparse import _MutuallyExclusiveGroup
+import datetime
 import pylab
 import re
+import calendar
 
 # cities in our weather data
 CITIES = [
@@ -268,18 +271,18 @@ def gen_cities_avg(climate, multi_cities, years):
         this array corresponds to the average annual temperature over the given
         cities for a given year.
     """
+
+    climate = Climate("data.csv")
     averages = []
 
-    for city in multi_cities:
-        city_early = []
-        for year in years:
-            city_early.append(climate.get_yearly_temp(city, year))
+    for year in years:
+        annual_temp = list()
+        for city in multi_cities:
+            annual_temp.append(
+                sum(climate.get_yearly_temp(city, year))/float(get_num_days(year)))
+        averages.append(sum(annual_temp)/len(multi_cities))
 
-        averages.append(pylab.array(calc_average_temp_of_year(city_early)))
-
-    sums = sum(averages)/len(multi_cities)
-
-    return sums
+    return pylab.array(averages)
 
 
 def moving_average(y, window_length):
@@ -339,8 +342,27 @@ def gen_std_devs(climate, multi_cities, years):
         this array corresponds to the standard deviation of the average annual
         city temperatures for the given cities in a given year.
     """
-    # TODO
-    pass
+    climate = Climate("data.csv")
+    list_stds = []
+
+    for year in years:
+        temp_for_each_day_in_each_year = list()
+        for day in range(1, get_num_days(year) + 1):
+            tmdate = datetime.datetime(
+                year, 1, 1) + datetime.timedelta(day - 1)
+
+            temp_in_cities = list()
+
+            for city in multi_cities:
+                temp_in_cities.append(climate.get_daily_temp(
+                    city, tmdate.month, tmdate.day, year))
+
+            temp_for_each_day_in_each_year.append(pylab.mean(temp_in_cities))
+
+        list_stds.append(
+            pylab.std(pylab.array(temp_for_each_day_in_each_year)))
+
+    return pylab.array(list_stds)
 
 
 def evaluate_models_on_testing(x, y, models):
@@ -378,15 +400,15 @@ def evaluate_models_on_testing(x, y, models):
         pylab.ylabel('Temperature (Degrees Celsius)')
 
         degree = len(model) - 1
-        rmse = rmse(predicted, y)
+        rmse_value = rmse(predicted, y)
         if degree == 1:
             standart_error_over_slope = se_over_slope(
                 x, y, predicted, model)
-            titlestr = 'Climate Regression Model, Degree {0}\nR-squared: {1:3f}, SE/slope: {2:.3f}'.format(
-                degree, rmse, standart_error_over_slope)
+            titlestr = 'Climate Regression Model, Degree {0}\nRMSE: {1:3f}, SE/slope: {2:.3f}'.format(
+                degree, rmse_value, standart_error_over_slope)
         else:
-            titlestr = 'Climate Regression Model, Degree {0}\nR-squared: {1:.3f}'.format(
-                degree, rmse)
+            titlestr = 'Climate Regression Model, Degree {0}\nRMSE: {1:.3f}'.format(
+                degree, rmse_value)
         pylab.title(titlestr)
         pylab.show()
     # TODO
@@ -400,6 +422,13 @@ def calc_average_temp_of_year(data_years):
         avg.append(pylab.sum(year)/len(year))
 
     return avg
+
+
+def get_num_days(year):
+    if calendar.isleap(year):
+        return 366
+    else:
+        return 365
 
 
 if __name__ == '__main__':
@@ -428,7 +457,7 @@ if __name__ == '__main__':
     #modelB = generate_models(years, average_year, [1])
     #evaluate_models_on_training(years, average_year, modelB)
 
-    ## Part B
+    # Part B
     cities_avg = gen_cities_avg(climate, CITIES, years)
     #modelC = generate_models(years, cities_avg, [1])
     #evaluate_models_on_training(years, cities_avg, modelC)
@@ -437,16 +466,23 @@ if __name__ == '__main__':
     #modelD = generate_models(years, mvg_avg, [1])
     #evaluate_models_on_training(years, mvg_avg, modelD)
 
-    ## Part C
+    # Part C
     mvg_avg = moving_average(cities_avg, 5)
     #modelD = generate_models(years, mvg_avg, [1])
     #evaluate_models_on_training(years, mvg_avg, modelD)
 
-    ## Part D.2
+    # Part D.2
     modelsA = generate_models(years, mvg_avg, [1, 2, 20])
-    import pdb
-    pdb.set_trace()
     evaluate_models_on_training(years, mvg_avg, modelsA)
+    cities_avg_test = gen_cities_avg(climate, CITIES, TESTING_INTERVAL)
+    mvg_avg_test = moving_average(cities_avg_test, 5)
+    years_test = []
+    years_test.extend(TESTING_INTERVAL)
+    years_test = pylab.array(years_test)
+    evaluate_models_on_testing(years_test, mvg_avg_test, modelsA)
 
     # Part E
-    # TODO: replace this line with your code
+    stds = gen_std_devs(climate, CITIES, TRAINING_INTERVAL)
+    mvg_std_avg = moving_average(stds, 5)
+    modelsB = generate_models(years, mvg_std_avg, [1])
+    evaluate_models_on_training(years, mvg_std_avg, modelsB)
